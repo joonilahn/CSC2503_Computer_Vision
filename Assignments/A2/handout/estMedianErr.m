@@ -1,6 +1,6 @@
 function [F1_noises, median_err] = estMedianErr(pLeft, pRight, nPts,...
                                     xbins, ybins, F0, sigmas, NUM_RESCALE)
-    %% A.3. Image position errors (Gaussian random noises)
+    %% Image position noises (Gaussian random noises)
 
     % % Random number generator seed:
     % seed = round(sum(1000*clock));
@@ -13,21 +13,20 @@ function [F1_noises, median_err] = estMedianErr(pLeft, pRight, nPts,...
         NUM_RESCALE = 1;
     end
 
-    F1s_noises = {};
-    pts_axis = size(xbins, 1);
+    F1_noises = {};
     num_iter = 100;
 
     for i=1:length(sigmas)
         noise_est = struct();
         noise_est.sigma = sigmas(i);
-        for r=1:100
-            pLeft_noise = pLeft + randn(3, nPts) * sigmas(i);
+        for r=1:num_iter
+            pLeft_noise = pLeft + [sigmas(i) .* randn(3, nPts)];
             pLeft_noise(3,:) = 1;
-            pRight_noise = pRight + randn(3, nPts) * sigmas(i);
+            pRight_noise = pRight + sigmas(i) .* randn(3, nPts);
             pRight_noise(3,:) = 1;
             [noise_est.F{r} Sa Sf] = linEstF(pLeft_noise, pRight_noise, NUM_RESCALE);
             noise_est.perpErr(r) = est_perpError(xbins, ybins, ...
-                                                 F0, noise_est.F{r}, pts_axis);
+                                                F0, noise_est.F{r});
         end
         F1_noises{i} = noise_est;
     end

@@ -58,8 +58,38 @@ function [H, Sa] = linEstH(left, right, NUM_RESCALE)
 
   %% Make constraint matrix A. 
   %% You fill in below here.
+  left = reshape(imPts(:,:,1), [3 nPts]);   % 3xK matrix
+  right = reshape(imPts(:,:,2), [3 nPts]);  % 3xK matrix
+  A = [];          % left_x: (3*nPts) x 3 cross product matrix
+  for k=1:nPts
+    left_k = left(:,k);
+    right_k = right(:,k);
+    A_k = [0 0 0 -1 -1 -1   left_k(2)  left_k(2)  left_k(2);
+           1 1 1  0  0  0  -left_k(1) -left_k(1) -left_k(1)];
+    A_k = A_k .* repmat(right_k',2,3);
+    A = [A; A_k];
+  end
   
-  %% Bogus return values.  You need to fix this.
-  H = 0;
-  Sa = 0;
+  %% Factor A
+  [Ua Sa Va] = svd(A); Sa = diag(Sa);
+    
+  %% Set H to be the right null vector of A, reshaped to a 3x3 matrix.
+  H0 = reshape(Va(:,end), 3,3)';
+  
+  %% Undo the renormalization
+  if NUM_RESCALE
+    H = inv(reshape(Knum(:,:,1),3,3)) * H0 * reshape(Knum(:,:,2),3,3);
+  end
+  H = H ./ sqrt(sum(sum(H.^2)));
+  
+  %% Sanity check
+  obj_val = 0;
+  for k=1:nPts
+      A_k = reshape(A(k,:),3,3);
+      check_sum = A_k * H * right(:,k);
+      obj_val = obj_val + sum(check_sum(1:2).^2);
+  end
+  fprintf('Objective value is %f\n', obj_val);
+end  
+  
   

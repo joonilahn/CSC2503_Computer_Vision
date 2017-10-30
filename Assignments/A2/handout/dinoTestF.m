@@ -52,7 +52,7 @@ Rright = MextRight(:, 1:3);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Generate data...
-sclZ = 1.0;
+sclZ = 1;
 %% Dino left image data
 [pLeft polys MintLeft MextLeft] = projectDino(f, dLeft, Rleft, sclZ);
 
@@ -239,7 +239,7 @@ ylabel('Frequency');
 idL = abs(perpErrL)< rho*sigma;
 idR = abs(perpErrR) < rho*sigma;
 idInlier = idL & idR;
-sum(idInlier)
-sum(idInlier)/nPts
+sum(idInlier);
+sum(idInlier)/nPts;
 
 %% save 'Fcorr' F Sa Sf idInlier nInliers
