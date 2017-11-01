@@ -1,5 +1,5 @@
 function [H, Sa] = linEstH(left, right, NUM_RESCALE)
-  % [H, Sa] = linEstH(left, right, NUM_RESCALE)
+  % [H, Sa, Sf] = linEstH(left, right, NUM_RESCALE)
   % Estimate the homography matrix H from two 3 x n matrices of
   % corresponding points left and right.  
   % Here left(:,k) x (H * right(:,k)) apprx= 0 where x denotes
@@ -82,14 +82,14 @@ function [H, Sa] = linEstH(left, right, NUM_RESCALE)
   end
   H = H ./ sqrt(sum(sum(H.^2)));
   
-  %% Sanity check
-  obj_val = 0;
-  for k=1:nPts
-      A_k = reshape(A(k,:),3,3);
-      check_sum = A_k * H * right(:,k);
-      obj_val = obj_val + sum(check_sum(1:2).^2);
-  end
-  fprintf('Objective value is %f\n', obj_val);
+%   %% Sanity check
+%   obj_val = 0;
+%   for k=1:nPts
+%       A_k = reshape(A(k,:),3,3);
+%       check_sum = A_k * H * right(:,k);
+%       obj_val = obj_val + sum(check_sum(1:2).^2);
+%   end
+%   fprintf('Objective value is %f\n', obj_val);
 end  
   
   

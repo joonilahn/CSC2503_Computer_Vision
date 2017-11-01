@@ -163,10 +163,6 @@ title('Epipolar Lines for the grid of points');
 perpErr = [];
 for i = 1:xinterval
     for j = 1:yinterval
-      % Plot interest point location corresponding to epipolar line as a "o"
-      % in the same colour as the epipolar line.
-%       plot(xbins(i), ybins(j), 'o', 'Color', 'b');
-      % Plot epipolar line.
       lF0 = [xbins(i); ybins(j); 1]' * F0';
       lF1 = [xbins(i); ybins(j); 1]' * F1';
       ep0 = cropLineInBox(lF0(1:2), lF0(3), cropBox);
@@ -184,45 +180,34 @@ max_perpErr = max(perpErr);     % compute max of max perpendicular error
 fprintf('The maximum of maximum perpendicular errors is %e\n', max_perpErr);
 
 %% A.3. Image position errors (Gaussian random noises)
+sigmas = [0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5 1.0 5.0];
 
-% % Random number generator seed:
-% seed = round(sum(1000*clock));
-% rand('state', seed);
-% seed0 = seed;
-% % We also need to start randn. Use a seedn generated from seed:
-% seedn = round(rand(1,1) * 1.0e+6);
-% randn('state', seedn);
+median_err3 = estMedianErr(pLeft, pRight, nPts, xbins, ybins, F0, sigmas);
 
-sigmas = [0.0001 0.0005 0.001 0.005 0.01 0.05 0.1 0.5 1.0 2.0];
-[F1_noises3, median_err3] = estMedianErr(pLeft, pRight, nPts, xbins, ybins,...
-                                                        F0, sigmas);
+%% A.4. No hartley's normalization
+% Estimate median errors
+median_err4 = estMedianErr(pLeft, pRight, nPts, xbins, ybins, F0, sigmas, 0);
 
-% %% A.4. No hartley's normalization
-% % Estimate median errors
-% [F1_noises4, median_err4] = estMedianErr(pLeft, pRight, nPts, xbins, ybins,...
-%                                                         F0, sigmas, 0);
-% 
-% %% A.5. Change the scale of Z component of Dino
-% f = 100;
-% sclZ = 0.1;
-% 
-% % Dino left image data with sclZ=0.1
-% [pLeft_sclZ polys MintLeft MextLeft] = projectDino(f, dLeft, Rleft, sclZ);
-% % Dino right image data with sclZ=0.1
-% [pRight_sclZ polys MintRight MextRight] = projectDino(f, dRight, Rright, sclZ);
-% 
-% % Reestimate the F0
-% F0_sclZ = estTrueF(dLeft, dRight, Rleft, Rright, MintLeft, MintRight);                                  
-% 
-% % Estimate median errors
-% [F1_noises5, median_err5] = estMedianErr(pLeft_sclZ, pRight_sclZ, nPts,...
-%                                       xbins, ybins, F0_sclZ, sigmas);
+%% A.5. Change the scale of Z component of Dino
+f = 100;
+sclZ = 0.1;
+
+% Dino left image data with sclZ=0.1
+[pLeft_sclZ polys MintLeft MextLeft] = projectDino(f, dLeft, Rleft, sclZ);
+% Dino right image data with sclZ=0.1
+[pRight_sclZ polys MintRight MextRight] = projectDino(f, dRight, Rright, sclZ);
+
+% Reestimate the F0
+F0_sclZ = estTrueF(dLeft, dRight, Rleft, Rright, MintLeft, MintRight);                                  
+
+% Estimate median errors
+median_err5 = estMedianErr(pLeft_sclZ, pRight_sclZ, nPts, xbins, ybins, F0_sclZ, sigmas);
 
 %% A.6. Smaller separation between two cameras
 % Different locations of centre of projection for the two cameras
 sclZ = 1;
-dLeft_sm = [0, 0, -150]';
-dRight_sm = [0, 0, -150]';
+dLeft_sm = [-5, 0, -150]';
+dRight_sm = [5, 0, -150]';
 
 % Compute camera rotations for the different separation
 [pLeft_sm polys MintLeft_sm MextLeft_sm] = projectDino(f, dLeft_sm, [], 1);
@@ -239,8 +224,7 @@ Rright_sm = MextRight_sm(:, 1:3);
 F0_sm = estTrueF(dLeft_sm, dRight_sm, Rleft_sm, Rright_sm, MintLeft_sm, MintRight_sm);
 
 % Estimate median errors
-[F1_noises6, median_err6] = estMedianErr(pLeft_sm, pRight_sm, nPts,...
-                                      xbins, ybins, F0_sm, sigmas);
+median_err6 = estMedianErr(pLeft_sm, pRight_sm, nPts, xbins, ybins, F0_sm, sigmas);
 
 %% Plot figures for A.3 A.4 A.5 A.6         
 % Plot figures for A.3
@@ -252,21 +236,21 @@ title('Median error as a function of sigma');
 xlabel('log sigma');
 ylabel('Median of maximum perpendicular error');
 
-% % Plot figures for A.4
-% figure(4);
-% plot(sigmas, median_err4);
-% set(gca, 'xscale','log')
-% title('Median error as a function of sigma with no Hartley''s Normalization');
-% xlabel('log sigma');
-% ylabel('Median of maximum perpendicular error');
-% 
-% % Plot figure for A.5
-% figure(5);
-% plot(sigmas, median_err5);
-% set(gca, 'xscale','log')
-% title('Median error as a function of sigma with sclZ=0.1');
-% xlabel('log sigma');
-% ylabel('Median of maximum perpendicular error');
+% Plot figures for A.4
+figure(4);
+plot(sigmas, median_err4);
+set(gca, 'xscale','log')
+title('Median error as a function of sigma with no Hartley''s Normalization');
+xlabel('log sigma');
+ylabel('Median of maximum perpendicular error');
+
+% Plot figure for A.5
+figure(5);
+plot(sigmas, median_err5);
+set(gca, 'xscale','log')
+title('Median error as a function of sigma with sclZ=0.1');
+xlabel('log sigma');
+ylabel('Median of maximum perpendicular error');
 
 % Plot figure for A.6
 figure(6);
