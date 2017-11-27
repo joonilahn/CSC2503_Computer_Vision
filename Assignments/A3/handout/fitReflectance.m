@@ -13,7 +13,7 @@ function [n, albedo] = fitReflectance(im, L)
   % YOU NEED TO COMPLETE THIS
   g = im * L' * inv(L*L');      % solve GLL' = IL'
   albedo = sqrt(sum(g.^2, 2));  % magnitude of g
-  n = g ./ albedo;              % direction of g
+  n = g ./ repmat(albedo, 1, 3) % direction of g
   
   % Find NaN and set to be zero
   % There are NaN values in n if there are zero input in im matrix.
